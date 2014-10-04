@@ -1,6 +1,11 @@
 var fs = require('fs')
 var DEFAULT_HEADER = "V3.0 character";
 
+
+//-----------------------------------------------------------------------------
+// Helper Functions
+//-----------------------------------------------------------------------------
+
 function isNumeric(value) {
 	for (var i = 0; i < value.length; i++) {
 		var ch = value.charCodeAt(i);
@@ -14,14 +19,24 @@ function parseValue(value) {
 	return isNumeric(value) ? parseInt(value) : value;
 }
 
-function parseCharacterData(data) {
-	var lines = data.toString('ascii').split("\n");
-	var result = {
-		Name: '',
-		Password: '',
-		Desc: '',
-		Colors: 't#############'
+
+//-----------------------------------------------------------------------------
+// Character Handling
+//-----------------------------------------------------------------------------
+
+function makeCharacter(charname, passwd, description, colorCode) {
+	return {
+		Name: charname,
+		Password: passwd,
+		Desc: description,
+		Colors: (typeof colorCode == 'undefined' ? 't##############' : colorCode)
 	};
+}
+
+
+function parseCharacterData(data) {
+	var result = makeCharacter("", "", "");
+	var lines = data.toString('ascii').split("\n");
 	
 	if (lines[0].trim() === DEFAULT_HEADER) {
 		for (var i = 1; i < lines.length; i++) {
@@ -47,6 +62,13 @@ function parseCharacterFile(filename, callback) {
 }
 
 
+//-----------------------------------------------------------------------------
+// Exports
+//-----------------------------------------------------------------------------
+
 module.exports.DEFAULT_HEADER = DEFAULT_HEADER;
+
+module.exports.makeCharacter = makeCharacter;
 module.exports.parseCharacterData = parseCharacterData;
 module.exports.parseCharacterFile = parseCharacterFile;
+

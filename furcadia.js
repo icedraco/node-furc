@@ -2,7 +2,6 @@
 // Furcadia Number Systems
 //------------------------------------------------------------------------------
 
-
 function fromBase95(b95num) {
 	var num = 0;
 	var mult = 1;
@@ -108,6 +107,17 @@ function shorturl(dreamUrl) {
 }
 
 
+//------------------------------------------------------------------------------
+// Addresses & Connections
+//------------------------------------------------------------------------------
+
+var addresses = {
+	gameserver: { host: 'lightbringer.furcadia.com', port: 6500 },
+	fileserver: { host: 'hades.furcadia.com', port: 6500 }
+};
+
+var ports = [21, 22, 80, 2300, 5000, 6500];
+
 
 //------------------------------------------------------------------------------
 // Exports
@@ -117,5 +127,10 @@ module.exports.fromBase95 = fromBase95;
 module.exports.toBase95 = toBase95;
 module.exports.fromBase220 = fromBase220;
 module.exports.toBase220 = fromBase220;
+
 module.exports.shortname = shortname;
 module.exports.shorturl = shorturl;
+
+module.exports.addresses = addresses;
+module.exports.ports = ports;
+
