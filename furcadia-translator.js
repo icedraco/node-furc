@@ -36,13 +36,14 @@ function stripTags(data) {
 //-----------------------------------------------------------------------------
 
 function translateText(emitter, text) {
-	var result = null;
+	var result;
+    var data = null;
 
 	//--- Communication
 	
 	if ((result = text.match(/^<name shortname='([^']+)'>([^<]+)<\/name>: (.*)$/i)) !== null)
 	{
-		var data = {
+		data = {
 			shortname: result[1],
 			name: result[2],
 			text: result[3]
@@ -53,7 +54,7 @@ function translateText(emitter, text) {
 
 	else if ((result = text.match(/^<font color='emote'><name shortname='([^']+)'>([^<]+)<\/name> (.*)<\/font>$/i)) !== null)
 	{
-		var data = {
+		data = {
 			shortname: result[1],
 			name: result[2],
 			action: result[3]
@@ -62,9 +63,9 @@ function translateText(emitter, text) {
 		emitter.emit('emote', data);
 	}
 
-	else if ((result = text.match(/^<font color='whisper'>\[ <name shortname='([^']+)' src='whisper-from'>([^<]+)<\/name> whispers, "(.*)" to you. \]<\/font>$/i)) !== null)
+	else if ((result = text.match(/^<font color='whisper'>\[ <name shortname='([^']+)' src='whisper-from'>([^<]+)<\/name> whispers, "(.*)" to you. ]<\/font>$/i)) !== null)
 	{
-		var data = {
+		data = {
 			shortname: result[1],
 			name: result[2],
 			message: result[3]
@@ -78,7 +79,7 @@ function translateText(emitter, text) {
 
 	else if ((result = text.match(/^<font color='query'><name shortname='([^']+)'>([^<]+)<\/name> requests permission to (join|summon|lead|follow)/i)) !== null)
 	{
-		var data = {
+		data = {
 			shortname: result[1],
 			name: result[2]
 		};
@@ -88,7 +89,7 @@ function translateText(emitter, text) {
 
 	else if ((result = text.match(/^<font color='query'><name shortname='([^']+)'>([^<]+)<\/name> asks you to join his or her company in <b>([^<]+)<\/b>./i)) !== null)
 	{
-		var data = {
+		data = {
 			shortname: result[1],
 			name: result[2],
 			dream: result[3].replace(/[|]/g, ' ')
@@ -102,37 +103,45 @@ function translateText(emitter, text) {
 
 	else if ((result = text.match(/^<font color='success'><name shortname='([^']+)'>([^<]+)<\/name> (joins|summons) you.<\/font>$/i)) !== null)
 	{
-		var data = {
+		data = {
 			shortname: result[1],
 			name: result[2]
 		};
 
 		switch (result[3]) {
-		case "summons":
-			emitter.emit('summonAccepted', data);
-			break;
+            case "summons":
+                emitter.emit('summonAccepted', data);
+                break;
 
-		case "joins":
-			emitter.emit('joinAccepted', data);
-			break;
+            case "joins":
+                emitter.emit('joinAccepted', data);
+                break;
+
+            default:
+                // Ignore
+                break;
 		}
 	}
 
 	else if ((result = text.match(/^<font color='success'><name shortname='([^']+)'>([^<]+)<\/name> begins to (lead|follow) you./i)) !== null)
 	{
-		var data = {
+		data = {
 			shortname: result[1],
 			name: result[2]
 		};
 
 		switch (result[3]) {
-		case "lead":
-			emitter.emit('lead', data);
-			break;
+            case "lead":
+                emitter.emit('lead', data);
+                break;
 
-		case "follow":
-			emitter.emit('follow', data);
-			break;
+            case "follow":
+                emitter.emit('follow', data);
+                break;
+
+            default:
+                // Ignore
+                break;
 		}
 	}
 }
@@ -140,6 +149,8 @@ function translateText(emitter, text) {
 
 function translate(emitter, buffer) {
 	if (!buffer) return;
+
+    var data = null, elems = [], str = "";
 
 	switch (buffer[0]) {
 	case 0x21: /* ! */
@@ -161,7 +172,7 @@ function translate(emitter, buffer) {
 		break;
 	
 	case 0x2f: /* / */
-		var data = {
+		data = {
 			user_id: furcadia.fromBase220(buffer.slice(1,5).toString()),
 			shape:   furcadia.fromBase220(buffer.slice(9,11).toString()),
 			target: {
@@ -207,11 +218,11 @@ function translate(emitter, buffer) {
 	
 	case 0x3c: /* < */
 		var name_len = furcadia.fromBase220(buffer.slice(11,12).toString());
-		var char_name = buffer.slice(11, 11+name_len).toString()
-		var data = {
+
+        data = {
 			user_id: furcadia.fromBase220(buffer.slice(1,5).toString()),
 			shape:   furcadia.fromBase220(buffer.slice(9,11).toString()),
-			name:    char_name,
+			name:    buffer.slice(11, 11+name_len).toString(),
 			location: {
 				x: furcadia.fromBase220(buffer.slice(5,7).toString()),
 				y: furcadia.fromBase220(buffer.slice(7,9).toString())
@@ -222,7 +233,6 @@ function translate(emitter, buffer) {
 		};
 
 		// Try to match colors
-		var tmp = buffer.slice(11+name_len);
 		if (buffer[0] == 0x74 /* t */) {
 			data.color = buffer.slice(0,11).toString();
 			data.flags_int = furcadia.fromBase220(buffer.slice(11,12).toString());
@@ -246,7 +256,7 @@ function translate(emitter, buffer) {
 		break;
 
 	case 0x40: /* @ */
-		var data = {
+		data = {
 			to: {
 				x: furcadia.fromBase95(buffer.slice(1,3).toString()),
 				y: furcadia.fromBase95(buffer.slice(3,5).toString())
@@ -264,7 +274,7 @@ function translate(emitter, buffer) {
 		break;
 	
 	case 0x41: /* A */
-		var data = {
+		data = {
 			user_id: furcadia.fromBase220(buffer.slice(1,5).toString()),
 			shape:   furcadia.fromBase220(buffer.slice(9,11).toString()),
 			location: {
@@ -277,7 +287,7 @@ function translate(emitter, buffer) {
 		break;
 	
 	case 0x42: /* B */
-		var data = {
+		data = {
 			user_id: furcadia.fromBase220(buffer.slice(1,5).toString()),
 			shape:   furcadia.fromBase220(buffer.slice(5,7).toString()),
 			color:   buffer.slice(7).toString()
@@ -287,7 +297,7 @@ function translate(emitter, buffer) {
 		break;
 	
 	case 0x43: /* C */
-		var data = {
+		data = {
 			user_id: furcadia.fromBase220(buffer.slice(1,5).toString()),
 			location: {
 				x: furcadia.fromBase220(buffer.slice(5,7).toString()),
@@ -317,15 +327,17 @@ function translate(emitter, buffer) {
 			break;
 
 		case 0x25: /* % */
-			var data = {
+			data = {
 				status: buffer[2] - 0x30,
 				name:   buffer.slice(3).toString().replace(/[|]/g, ' ')
 			};
+
 			emitter.emit('characterOnlineStatus', data);
+            break;
 
 		case 0x26: /* & */
-			var elems = buffer.slice(2).toString().split(' ');
-			var data = {
+			elems = buffer.slice(2).toString().split(' ');
+			data = {
 				id: parseInt(elems[0]),
 				name: elems[1]
 			};
@@ -335,7 +347,7 @@ function translate(emitter, buffer) {
 
 		case 0x2d: /* - */
 			var regularEmit = true;
-			var data = buffer.slice(2).toString();
+			data = buffer.slice(2).toString();
 			if (data.charAt(0) === '#') {
 				switch (data.charAt(1)) {
 				case 'A':
@@ -346,6 +358,9 @@ function translate(emitter, buffer) {
 					emitter.emit('prefixBadge', data.substr(2));
 					regularEmit = false;
 					break;
+                default:
+                    // Ignore
+                    break;
 				}
 			}
 
@@ -363,7 +378,7 @@ function translate(emitter, buffer) {
 			break;
 
 		case 0x43: /* C */
-			var data = {
+			data = {
 				type: buffer[2] - 0x30,
 				url: buffer.slice(3).toString()
 			};
@@ -387,8 +402,8 @@ function translate(emitter, buffer) {
 			emitter.emit('disableTab', parseInt(buffer.slice(2).toString()));
 			break;
 
-		case 0x46: /* H */
-			var data = {
+		case 0x48: /* H */
+			data = {
 				user_id: furcadia.fromBase220(buffer.slice(2,6).toString()),
 				offset: {
 					x: furcadia.fromBase220(buffer.slice(7,8).toString()),
@@ -399,11 +414,11 @@ function translate(emitter, buffer) {
 			emitter.emit('offsetAvatar', data);
 			break;
 
-		case 0x47: /* I */
+		case 0x49: /* I */
 			emitter.emit('particleEffect', buffer.slice(2));
 			break;
 
-		case 0x48: /* J */
+		case 0x4a: /* J */
 			emitter.emit('webMapName', buffer.slice(2).toString());
 			break;
 
@@ -426,7 +441,7 @@ function translate(emitter, buffer) {
 
 		case 0x66: /* f */
 			if (buffer[2] != 0x74 /* t */) {
-				var data = {
+				data = {
 					color: buffer.slice(2,16).toString(),
 					name:  buffer.slice(17).toString()
 				};
@@ -439,8 +454,8 @@ function translate(emitter, buffer) {
 			break;
 
 		case 0x71: /* q */
-			var elems = buffer.slice(3).toString().split(' ');
-			var data = {
+			elems = buffer.slice(3).toString().split(' ');
+			data = {
 				name: elems[0],
 				checksum: elems[1]
 			};
@@ -449,8 +464,8 @@ function translate(emitter, buffer) {
 			break;
 
 		case 0x72: /* r */
-			var elems = buffer.slice(3).toString().split(' ');
-			var data = {
+			elems = buffer.slice(3).toString().split(' ');
+			data = {
 				name: elems[0],
 				checksum: elems[1]
 			};
@@ -459,8 +474,8 @@ function translate(emitter, buffer) {
 			break;
 
 		case 0x73: /* s */
-			var elems = buffer.slice(8).toString().split(' ');
-			var data = {
+			elems = buffer.slice(8).toString().split(' ');
+			data = {
 				location: {
 					x: furcadia.fromBase95(buffer.slice(2,3).toString()),
 					y: furcadia.fromBase95(buffer.slice(4,5).toString())
@@ -489,7 +504,8 @@ function translate(emitter, buffer) {
 		case 0x76: /* v */
 			var typeChar = String.fromCharCode(buffer[2]);
 			var typeStr  = EFFECT_TYPES[typeChar] || typeChar;
-			var data = {
+
+            data = {
 				type: typeStr,
 				location: {
 					x: furcadia.fromBase95(buffer.slice(3,4).toString()),
@@ -529,7 +545,7 @@ function translate(emitter, buffer) {
 			break;
 
 		default:
-			var str = buffer.slice(1).toString();
+			str = buffer.slice(1).toString();
 			if (str.startsWith("]marco ")) {
 				emitter.emit('marco', str.substr(7));
 			}
@@ -543,7 +559,7 @@ function translate(emitter, buffer) {
 		break;
 	
 	default:
-		var str = buffer.toString();
+		str = buffer.toString();
 		if (str === "Dragonroar")
 			emitter.emit('auth');
 		else if (str === '&&&&&&&&&&&&&')

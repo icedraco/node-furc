@@ -99,7 +99,7 @@ function FurcadiaClient(character, address) {
 			throw "Not connected";
 		
 		self.socket.write(data, DATA_ENCODING);
-	}
+	};
 
 	self.send = function(line) {
 		if (line) self.raw(line + "\n", DATA_ENCODING);

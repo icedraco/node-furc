@@ -52,7 +52,7 @@ function fromBase220(b220num) {
 }
 
 
-function fromBase220(num, len) {
+function toBase220(num, len) {
 	var buffer = [];
 	
 	// Length is optional
@@ -80,8 +80,8 @@ function fromBase220(num, len) {
 // Shortnames
 //------------------------------------------------------------------------------
 
-function isAlphaNum(ch) {
-	var ch = ch.charCodeAt(0) | 0x20; // Lowercase
+function isAlphaNum(c) {
+	var ch = c.charCodeAt(0) | 0x20; // Lowercase
 	return (ch >= 0x30 && ch <= 0x39) ||
 		   (ch >= 0x61 && ch <= 0x7a);
 }

@@ -2,7 +2,7 @@ var util = require('util');
 var events = require('events');
 
 function LineBuffer(data, callback) {
-	self = this;
+	var self = this;
 	self.buf = new Buffer(data || "");
 
 	// EventEmitter constructor
